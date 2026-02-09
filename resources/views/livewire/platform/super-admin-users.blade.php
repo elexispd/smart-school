@@ -126,6 +126,7 @@
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">S/N</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">User</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
@@ -134,8 +135,9 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            @foreach($users as $user)
+                            @foreach($users as $index => $user)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ $users->firstItem() + $index }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         @if($user->avatar)
@@ -356,27 +358,31 @@
         <div class="fixed inset-0 z-50 overflow-y-auto" style="background-color: rgba(0, 0, 0, 0.7);">
             <div class="flex min-h-screen items-center justify-center p-4">
                 <div class="absolute inset-0" wire:click="closeModal"></div>
-                <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl my-8">
-                    <!-- Header with Avatar -->
-                    <div class="relative h-32 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-t-2xl">
+                <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl my-8 overflow-hidden">
+                    <!-- Header with gradient and close button -->
+                    <div class="relative h-32 bg-gradient-to-r from-emerald-500 to-teal-600">
                         <button wire:click="closeModal" class="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
-                    
-                    <div class="px-6 pb-6">
+
+                    <!-- Content -->
+                    <div class="px-6 pb-6 relative">
                         <!-- Avatar and Name -->
-                        <div class="flex items-end -mt-16 mb-6">
+                        <div class="absolute -top-12 left-6 z-10">
                             @if($viewUser->avatar)
-                                <img src="{{ Storage::url($viewUser->avatar) }}" alt="{{ $viewUser->name }}" class="w-32 h-32 rounded-2xl border-4 border-white dark:border-gray-800 shadow-lg object-cover">
+                                <img src="{{ Storage::url($viewUser->avatar) }}" alt="{{ $viewUser->name }}" class="w-24 h-24 rounded-2xl border-4 border-white dark:border-gray-800 shadow-lg object-cover bg-white">
                             @else
-                                <div class="w-32 h-32 rounded-2xl border-4 border-white dark:border-gray-800 shadow-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-5xl font-bold text-white">
+                                <div class="w-24 h-24 rounded-2xl border-4 border-white dark:border-gray-800 shadow-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-3xl font-bold text-white">
                                     {{ strtoupper(substr($viewUser->name, 0, 1)) }}
                                 </div>
                             @endif
-                            <div class="ml-6 mb-2">
-                                <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ $viewUser->name }}</h3>
-                                <span class="inline-block mt-2 px-4 py-1.5 text-sm font-semibold rounded-full
+                        </div>
+
+                        <div class="ml-32 pt-3 pb-6">
+                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white leading-tight">{{ $viewUser->name }}</h3>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-semibold rounded-full
                                     @if($viewUser->role === 'super_admin') bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200
                                     @elseif($viewUser->role === 'school_admin') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
                                     @elseif($viewUser->role === 'teacher') bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200
@@ -386,7 +392,7 @@
                                 </span>
                             </div>
                         </div>
-                        
+
                         <!-- User Details Grid -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Basic Information -->
@@ -414,7 +420,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- School Information -->
                             @if($viewUser->school)
                             <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
@@ -448,7 +454,7 @@
                                 </div>
                             </div>
                             @endif
-                            
+
                             <!-- Staff Information -->
                             @if($viewUser->staff)
                             <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
@@ -476,7 +482,7 @@
                                 </div>
                             </div>
                             @endif
-                            
+
                             <!-- Student Information -->
                             @if($viewUser->student)
                             <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
@@ -506,7 +512,7 @@
                             @endif
                         </div>
                     </div>
-                    
+
                     <!-- Footer -->
                     <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
                         @if(auth()->user()->hasPermission('edit users'))
