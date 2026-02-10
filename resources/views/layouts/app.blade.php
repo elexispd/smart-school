@@ -46,7 +46,7 @@
                 @endif
 
                 <!-- Page Content -->
-                <main class="flex-1 overflow-y-auto p-6">
+                <main class="flex-1 overflow-y-auto p-0 sm:p-6">
                     {{ $slot }}
                 </main>
             </div>
