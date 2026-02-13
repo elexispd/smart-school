@@ -35,6 +35,11 @@ new class extends Component
                     </x-nav-link>
                     
                     @if(in_array(auth()->user()->role, ['school_admin', 'teacher']))
+                    @if(auth()->user()->role === 'school_admin')
+                    <x-nav-link :href="route('school.users')" :active="request()->routeIs('school.users')" wire:navigate>
+                        {{ __('Users') }}
+                    </x-nav-link>
+                    @endif
                     <x-nav-link :href="route('school.classes')" :active="request()->routeIs('school.classes')" wire:navigate>
                         {{ __('Classes') }}
                     </x-nav-link>
@@ -98,6 +103,11 @@ new class extends Component
             </x-responsive-nav-link>
             
             @if(in_array(auth()->user()->role, ['school_admin', 'teacher']))
+            @if(auth()->user()->role === 'school_admin')
+            <x-responsive-nav-link :href="route('school.users')" :active="request()->routeIs('school.users')" wire:navigate>
+                {{ __('Users') }}
+            </x-responsive-nav-link>
+            @endif
             <x-responsive-nav-link :href="route('school.classes')" :active="request()->routeIs('school.classes')" wire:navigate>
                 {{ __('Classes') }}
             </x-responsive-nav-link>

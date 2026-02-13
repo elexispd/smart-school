@@ -54,12 +54,24 @@ Route::middleware(['auth', 'verified', 'school.status'])->group(function () {
     Route::view('staff/dashboard', 'livewire.school.staff.dashboard')->name('staff.dashboard')->middleware('role:teacher');
     Route::view('student/dashboard', 'livewire.school.student.dashboard')->name('student.dashboard')->middleware('role:student');
     
+    // User Management - School Admin only
+    Route::get('school/users', \App\Livewire\School\ManageUsers::class)->name('school.users')->middleware('role:school_admin');
+    
+    // Session Management - School Admin only
+    Route::get('school/sessions', \App\Livewire\School\ManageSessions::class)->name('school.sessions')->middleware('role:school_admin');
+    
     // Academic Management - Accessible to school_admin and teacher
     Route::get('school/classes', \App\Livewire\School\ManageClasses::class)->name('school.classes');
     Route::get('school/classes/{classId}/subjects', \App\Livewire\School\ManageClassSubjects::class)->name('school.class-subjects');
     Route::get('school/class-arms', \App\Livewire\School\ManageClassArms::class)->name('school.class-arms');
     Route::get('school/class-arms/{classArmId}/subjects', \App\Livewire\School\ManageClassArmSubjects::class)->name('school.class-arm-subjects');
     Route::get('school/subjects', \App\Livewire\School\ManageSubjects::class)->name('school.subjects');
+    Route::get('school/staff-assignments', \App\Livewire\School\ManageStaffAssignments::class)->name('school.staff-assignments')->middleware('role:school_admin');
+    
+    // Fee Management - School Admin only
+    Route::get('school/fee-categories', \App\Livewire\School\ManageFeeCategories::class)->name('fee-categories.index')->middleware('role:school_admin');
+    Route::get('school/fee-structures', \App\Livewire\School\ManageFeeStructures::class)->name('fee-structures.index')->middleware('role:school_admin');
+    Route::get('school/student-payments', \App\Livewire\School\ManageStudentPayments::class)->name('student-payments.index')->middleware('role:school_admin');
 });
 
 Route::view('profile', 'profile')

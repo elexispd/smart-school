@@ -9,21 +9,67 @@ new #[Layout('layouts.split')] class extends Component
 {
     public LoginForm $form;
     public string $role = 'student';
+    public string $admission_number = '';
+    public string $r_pin = '';
+    public bool $showPinStep = false;
+
+    public function checkAdmissionNumber(): void
+    {
+        $this->validate(['admission_number' => 'required']);
+        
+        $student = \App\Models\Student::where('admission_number', $this->admission_number)
+            ->where('status', 'active')
+            ->first();
+        
+        if (!$student) {
+            $this->addError('admission_number', 'Invalid admission number.');
+            return;
+        }
+        
+        $this->showPinStep = true;
+    }
 
     public function login(): void
     {
-        $this->validate();
-        
-        // Map staff role to match database roles (teacher, board_member, etc.)
-        if ($this->role === 'staff') {
-            $this->form->role = null; // Allow any non-student, non-super_admin role
+        if ($this->role === 'student') {
+            $this->validate([
+                'admission_number' => 'required',
+                'r_pin' => 'required|size:6',
+            ]);
+            
+            $student = \App\Models\Student::where('admission_number', $this->admission_number)
+                ->where('r_pin', $this->r_pin)
+                ->where('status', 'active')
+                ->first();
+            
+            if (!$student) {
+                $this->addError('r_pin', 'Invalid PIN.');
+                return;
+            }
+            
+            \Illuminate\Support\Facades\Auth::login($student->user);
+            Session::regenerate();
+            $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
         } else {
-            $this->form->role = $this->role;
+            $this->validate();
+            
+            if ($this->role === 'staff') {
+                $this->form->role = null;
+            } else {
+                $this->form->role = $this->role;
+            }
+            
+            $this->form->authenticate();
+            Session::regenerate();
+            $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
         }
-        
-        $this->form->authenticate();
-        Session::regenerate();
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+    }
+
+    public function updatedRole(): void
+    {
+        $this->showPinStep = false;
+        $this->admission_number = '';
+        $this->r_pin = '';
     }
 }; ?>
 
@@ -38,7 +84,7 @@ new #[Layout('layouts.split')] class extends Component
             <label class="block text-sm font-medium text-gray-700 mb-3">Select a role to access tailored features</label>
             <div class="grid grid-cols-2 gap-4">
                 <label class="cursor-pointer relative">
-                    <input type="radio" wire:model="role" value="student" class="peer sr-only">
+                    <input type="radio" wire:model.live="role" value="student" class="peer sr-only">
                     <div class="p-4 rounded-lg border-2 border-gray-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-400 transition-all flex items-center justify-center gap-2">
                         <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
@@ -51,7 +97,7 @@ new #[Layout('layouts.split')] class extends Component
                 </label>
 
                 <label class="cursor-pointer relative">
-                    <input type="radio" wire:model="role" value="staff" class="peer sr-only">
+                    <input type="radio" wire:model.live="role" value="staff" class="peer sr-only">
                     <div class="p-4 rounded-lg border-2 border-gray-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-400 transition-all flex items-center justify-center gap-2">
                         <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
@@ -66,6 +112,55 @@ new #[Layout('layouts.split')] class extends Component
 
         </div>
 
+        @if($role === 'student')
+            @if(!$showPinStep)
+            <div class="mb-5">
+                <label for="admission_number" class="block text-sm font-medium text-gray-700 mb-2">Admission Number</label>
+                <input wire:model="admission_number" id="admission_number" class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" type="text" required autofocus placeholder="Enter your admission number" />
+                <x-input-error :messages="$errors->get('admission_number')" class="mt-2" />
+            </div>
+
+            <div class="mt-6">
+                <button type="button" wire:click="checkAdmissionNumber" wire:loading.attr="disabled" wire:target="checkAdmissionNumber" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex justify-center items-center">
+                    <span wire:loading.remove wire:target="checkAdmissionNumber">Continue</span>
+                    <span wire:loading wire:target="checkAdmissionNumber">
+                        <svg class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+            @else
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Admission Number</p>
+                        <p class="font-semibold text-gray-900">{{ $admission_number }}</p>
+                    </div>
+                    <button type="button" wire:click="$set('showPinStep', false)" class="text-sm text-blue-600 hover:text-blue-700 font-medium">Change</button>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label for="r_pin" class="block text-sm font-medium text-gray-700 mb-2">Result PIN</label>
+                <input wire:model="r_pin" id="r_pin" class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" type="password" maxlength="6" required autofocus placeholder="Enter your 6-digit PIN" />
+                <x-input-error :messages="$errors->get('r_pin')" class="mt-2" />
+            </div>
+
+            <div class="mt-6">
+                <button type="submit" wire:loading.attr="disabled" wire:target="login" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex justify-center items-center">
+                    <span wire:loading.remove wire:target="login">Log in</span>
+                    <span wire:loading wire:target="login">
+                        <svg class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+            @endif
+        @else
         <div class="mb-5">
             <label for="email" class="block text-sm font-medium text-gray-700 mb-2">School Email</label>
             <input wire:model="form.email" id="email" class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" type="email" name="email" required autofocus autocomplete="username" placeholder="Salimia.Edward@schoolmail.com" />
@@ -106,6 +201,7 @@ new #[Layout('layouts.split')] class extends Component
                 </span>
             </button>
         </div>
+        @endif
 
         <div class="mt-6 text-center">
             <a href="{{ route('admin.login') }}" class="text-sm text-gray-600 hover:text-blue-600 transition-colors" wire:navigate>

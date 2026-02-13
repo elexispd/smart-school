@@ -37,6 +37,11 @@ class Student extends Model
         return $this->belongsTo(ClassArm::class);
     }
 
+    public function payments()
+    {
+        return $this->hasMany(StudentPayment::class);
+    }
+
     public function electiveSubjects()
     {
         return $this->belongsToMany(Subject::class, 'student_subject', 'student_id', 'subject_id')

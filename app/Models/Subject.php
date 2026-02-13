@@ -36,4 +36,9 @@ class Subject extends Model
             ->withPivot('type')
             ->withTimestamps();
     }
+
+    public function staffAssignments()
+    {
+        return $this->hasMany(StaffSubjectAssignment::class);
+    }
 }

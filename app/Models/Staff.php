@@ -25,4 +25,9 @@ class Staff extends Model
     {
         return $this->belongsTo(School::class);
     }
+
+    public function subjectAssignments()
+    {
+        return $this->hasMany(StaffSubjectAssignment::class);
+    }
 }
